@@ -1,0 +1,25 @@
+{
+  "short_name": "Health Tracker",
+  "name": "Health Tracker App",
+  "icons": [
+    {
+      "src": "https://storage.googleapis.com/mixo-files/logos/healthTrack-1692291065523.svg",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "https://storage.googleapis.com/mixo-files/logos/healthTrack-1692291065523.svg",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://storage.googleapis.com/mixo-files/logos/healthTrack-1692291065523.svg",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#00bfff",
+  "background_color": "#ffffff"
+}

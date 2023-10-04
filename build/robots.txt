@@ -1,0 +1,6 @@
+# Health Tracker Website
+# This robots.txt file provides instructions to web crawlers.
+
+# Allow all web crawlers to access the entire site.
+User-agent: *
+Disallow:
