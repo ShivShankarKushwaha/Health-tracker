@@ -23,9 +23,10 @@ Download this repository and run npm install
 
 sample data
 1. .env
+MONGO_LINK =YOUR_MONGODB_LINK
 SESSION_SECRET = some_session_secret_text
 
-2.  Mail.js
+3.  Mail.js
 module.exports = {
   user: "YOUR_EMAIL",
   clientId: "YOUR_CLIENT_ID",
@@ -33,7 +34,7 @@ module.exports = {
   refreshToken: "REFRESH_TOKEN",
 };
 
-3. config.json
+4. config.json
    {
   "google": {
     "web": {
