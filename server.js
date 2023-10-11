@@ -11,6 +11,7 @@ const SECRET = process.env.SESSION_SECRET;
 const bcrypt = require("bcrypt");
 const Mailer = require("./SendMail");
 const PinGenerator = require("./OTP");
+const jwt = require('jsonwebtoken'); 
 
 app.use(bp.urlencoded({ extended: true }));
 app.use(express.json());
@@ -97,6 +98,8 @@ app.get("/success", async (req, res) =>
         await note.save();
         console.log("responce /success", responce);
     }
+    res.clearCookie('user');
+    res.cookie('user', signjwt(req.session.email), { expires: 5 * 24 * 60 * 60 * 1000 });
     // return res.redirect(`${process.env.FRONTEND}/dashboard`);
     return res.redirect(`/dashboard`);
 });
@@ -111,11 +114,38 @@ function comparepass(data, stored)
 {
     return bcrypt.compareSync(data, stored);
 }
-
+function signjwt(data)
+{
+    let token = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '5d' });
+    return token;
+}
+function verifyjwt(data)
+{
+    let verified = jwt.verify(data, process.env.JWT_SECRET, (err, decoded) =>
+    {
+        if (err) 
+        {
+            return false;
+        }
+        else 
+        {
+            return decoded;
+        }
+    })
+}
 app.get("/", async (req, res) =>
 {
     res.send("hello");
 });
+app.get("/initializeuser", (req, res) =>
+{
+    let token = req.cookies.user;
+    let data = verifyjwt(token);
+    if (data) 
+    {
+        req.session.email = data;
+    }
+})
 app.post("/sign", async (req, res) =>
 {
     let { name, email, password } = req.body;
@@ -151,6 +181,8 @@ app.post("/login", async (req, res) =>
         }
         let name = req.session.name;
         req.session.email = email;
+        res.clearCookie('user');
+        res.cookie('user', signjwt(req.session.email), { expires: 5 * 24 * 60 * 60 * 1000 });
         return res.status(200).json({ status: "Successfully Logged in" });
     }
     res.status(404).json({ status: "User Not found" });
@@ -202,6 +234,8 @@ app.post("/verifyotp", async (req, res) =>
     } catch (error) {
         return res.status(300).json({ message: "Data not saved in database" });
     }
+    res.clearCookie('user');
+    res.cookie('user', signjwt(req.session.email), { expires: 5 * 24 * 60 * 60 * 1000 });
     return res.status(200).json({ message: "Otp Verified" });
 });
 app.post("/addnote", async (req, res) =>
