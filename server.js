@@ -99,7 +99,7 @@ app.get("/success", async (req, res) =>
         console.log("responce /success", responce);
     }
     res.clearCookie('user');
-    res.cookie('user', signjwt(req.session.email), { expires: 5 * 24 * 60 * 60 * 1000 });
+    res.cookie('user', signjwt(req.session.email));
     // return res.redirect(`${process.env.FRONTEND}/dashboard`);
     return res.redirect(`/dashboard`);
 });
@@ -183,7 +183,7 @@ app.post("/login", async (req, res) =>
         let name = req.session.name;
         req.session.email = email;
         res.clearCookie('user');
-        res.cookie('user', signjwt(req.session.email), { expires: 5 * 24 * 60 * 60 * 1000 });
+        res.cookie('user', signjwt(req.session.email));
         return res.status(200).json({ status: "Successfully Logged in" });
     }
     res.status(404).json({ status: "User Not found" });
@@ -236,7 +236,7 @@ app.post("/verifyotp", async (req, res) =>
         return res.status(300).json({ message: "Data not saved in database" });
     }
     res.clearCookie('user');
-    res.cookie('user', signjwt(req.session.email), { expires: 5 * 24 * 60 * 60 * 1000 });
+    res.cookie('user', signjwt(req.session.email));
     return res.status(200).json({ message: "Otp Verified" });
 });
 app.post("/addnote", async (req, res) =>
