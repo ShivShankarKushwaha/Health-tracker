@@ -19,7 +19,7 @@ app.use(cookieParser());
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static('build'));
 }
-app.use(express.static('build'));
+
 app.use(
     session({
         secret: SECRET,
@@ -99,7 +99,7 @@ app.get("/success", async (req, res) =>
         console.log("responce /success", responce);
     }
     res.clearCookie('user');
-    res.cookie('user', signjwt(req.session.email));
+    res.cookie('user', signjwt(req.session.email),{maxAge:3*24*60*60*1000});
     // return res.redirect(`${process.env.FRONTEND}/dashboard`);
     return res.redirect(`/dashboard`);
 });
@@ -133,19 +133,25 @@ function verifyjwt(data)
             return decoded;
         }
     })
+    return verified;
 }
 app.get("/", async (req, res) =>
 {
     res.send("hello");
 });
-app.get("/initializeuser", (req, res) =>
+app.post("/initializeuser", (req, res) =>
 {
-    let token = req.cookies.user;
+    console.log('inside intializeuser');
+    let token = req.body.user.split('=')[1];;
+    console.log('recieved token',token);
     let data = verifyjwt(token);
+    console.log('inside initalize user',data);
     if (data) 
     {
-        req.session.email = data;
+        req.session.email = data.data;
+        return res.status(200).json({message:'user found'});
     }
+    res.status(300).json({message:'user not found'});
 })
 app.post("/sign", async (req, res) =>
 {
@@ -183,7 +189,9 @@ app.post("/login", async (req, res) =>
         let name = req.session.name;
         req.session.email = email;
         res.clearCookie('user');
-        res.cookie('user', signjwt(req.session.email));
+        const token = signjwt(req.session.email)
+        res.cookie('user', token,{maxAge:3*24*60*60*1000});
+        console.log('cookie saving',token);
         return res.status(200).json({ status: "Successfully Logged in" });
     }
     res.status(404).json({ status: "User Not found" });
@@ -236,7 +244,7 @@ app.post("/verifyotp", async (req, res) =>
         return res.status(300).json({ message: "Data not saved in database" });
     }
     res.clearCookie('user');
-    res.cookie('user', signjwt(req.session.email));
+    res.cookie('user', signjwt(req.session.email),{maxAge:3*24*60*60*1000});
     return res.status(200).json({ message: "Otp Verified" });
 });
 app.post("/addnote", async (req, res) =>
@@ -508,6 +516,7 @@ app.get("/logout", (req, res) =>
 {
     try {
         req.session.destroy();
+        res.clearCookie('user');
     } catch (error) {
         res.status(400).json({ status: "not logout" });
         return;
