@@ -116,7 +116,8 @@ function comparepass(data, stored)
 }
 function signjwt(data)
 {
-    let token = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '5d' });
+    const payload = { data };
+    let token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5d' });
     return token;
 }
 function verifyjwt(data)
