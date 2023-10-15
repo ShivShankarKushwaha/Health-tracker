@@ -117,7 +117,7 @@ function comparepass(data, stored)
 function signjwt(data)
 {
     const payload = { data };
-    let token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5d' });
+    let token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
     return token;
 }
 function verifyjwt(data)
@@ -511,7 +511,26 @@ app.post("/gettoday",async(req,res)=>
     return res.status(200).json(data);
     
 })
-
+app.post("/resetpassword",async(req,res)=>
+{
+    if(req.session.email)
+    {
+        let hashedpassword = encryption(req.body.password);
+        let responce = await User.updateOne({email:req.session.email},{$set:{password:hashedpassword}});
+        if(!responce)
+        {
+            return res.status(300).json({message:'Password not updated'})
+        }
+        else
+        {
+            return res.status(200).json({message:'paasword updated successfully'});
+        }
+    }
+    else
+    {
+        return res.status(300).json({message:'User not found'});
+    }
+})
 app.get("/logout", (req, res) =>
 {
     try {
