@@ -16,9 +16,9 @@ const jwt = require('jsonwebtoken');
 app.use(bp.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static('build'));
-}
+app.use(express.static('build'));
+// if (process.env.NODE_ENV === 'production') {
+// }
 
 app.use(
     session({
@@ -101,7 +101,7 @@ app.get("/success", async (req, res) =>
     res.clearCookie('user');
     res.cookie('user', signjwt(req.session.email),{maxAge:3*24*60*60*1000});
     // return res.redirect(`${process.env.FRONTEND}/dashboard`);
-    return res.redirect(`/dashboard`);
+    return res.redirect(`/`);
 });
 
 //////////////////////////////////////// google login end ////////////////////////////////////////
@@ -149,6 +149,10 @@ app.post("/initializeuser", (req, res) =>
     if (data) 
     {
         req.session.email = data.data;
+        return res.status(200).json({message:'user found'});
+    }
+    else if(req.session?.email)
+    {
         return res.status(200).json({message:'user found'});
     }
     res.status(300).json({message:'user not found'});
@@ -530,6 +534,128 @@ app.post("/resetpassword",async(req,res)=>
     {
         return res.status(300).json({message:'User not found'});
     }
+})
+app.get("/allrequested", async (req, res) =>
+{
+    if (!req.session.email) {
+        return res.status(500).json({ message: "Login First" });
+    }
+    try {
+        const allUserData = await Notes.find({});
+        const allRequestedAppointments = allUserData.reduce((appointments, user) =>
+        {
+            const userAppointmentsWithEmail = user.appointments
+                .filter((appointment) => appointment.status === false)
+                .map((appointment) => ({
+                    ...appointment.toObject(),  // Convert to plain object
+                    email: user.email,
+                }));
+
+            appointments.push(...userAppointmentsWithEmail);
+            return appointments;
+        }, []);
+
+        console.log('All requested appointments:', allRequestedAppointments);
+
+        res.status(200).json(allRequestedAppointments);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+app.post("/acceptingrequest",async(req,res)=>
+{
+    if (!req.session.email) {
+        return res.status(500).json({ message: "Login First" });
+    }
+    let {id,email}=req.body;
+    let usernote = await Notes.findOne({email:email});
+    let note =usernote.appointments.filter((item)=>
+    {
+        if(item._id==id)
+        {
+            item.doctor=req.session.email;   // change email
+            item.status=true;
+            return true;
+        }
+    })
+    await Mailer(email,note);
+    let responce= await usernote.save();
+    return res.json(responce);
+
+})
+app.get("/allscheduled",async(req,res)=>
+{
+    if (!req.session.email) {
+        return res.status(500).json({ message: "Login First" });
+    }
+    try {
+        const AllAppointments = await Notes.find({});
+        const allRequestedAppointments = AllAppointments.reduce((appointments, user) =>
+        {
+            const userAppointmentsWithEmail = user.appointments
+                .filter((appointment) => appointment.doctor == req.session.email)
+                .map((appointment) => ({
+                    ...appointment.toObject(),
+                    email:user.email 
+                }));
+
+            appointments.push(...userAppointmentsWithEmail);
+            return appointments;
+        }, []);
+
+        console.log('All requested appointments:', allRequestedAppointments);
+
+        res.status(200).json(allRequestedAppointments);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+})
+app.post("/deleteappointment", async (req, res) =>
+{
+    if (!req.session.email) {
+        return res.status(500).json({ message: "Login First" });
+    }
+    try {
+        const id = req.body.id;
+        const note = await Notes.findOne({ email: req.session.email });
+        note.appointments = note.appointments.filter((item) => item._id != id);
+        await note.save();
+        res.status(200).json({ message: 'Appointment deleted successfully' });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+app.get("/doctorcheck",async(req,res)=>
+{
+    let user =await User.findOne({email:req.session.email});
+    if(user?.doctor)
+    {
+        return res.status(200).json({message:'doctor'});
+    }
+    return res.status(300).json({message:'user'});
+})
+app.post("/removeappointment",async(req,res)=>
+{
+    if (!req.session.email) {
+        return res.status(500).json({ message: "Login First" });
+    }
+    let { id, email } = req.body;
+    let usernote = await Notes.findOne({ email: email });
+    usernote.appointments.filter((item) =>
+    {
+        if (item._id == id) {
+            item.doctor = '';   // change email
+            item.status = false;
+            return true;
+        }
+    })
+    let responce = await usernote.save();
+    return res.json(responce);
+
 })
 app.get("/logout", (req, res) =>
 {

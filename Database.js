@@ -8,6 +8,10 @@ const schema = new mongoose.Schema({
   name: String,
   email: String,
   password:String,
+  doctor: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 
@@ -27,7 +31,8 @@ const noteschema = new mongoose.Schema({
       date:Date,
       time:String,
       message:String,
-      status:Boolean
+      status:Boolean,
+      doctor:String,
     }
   ],
   target:
