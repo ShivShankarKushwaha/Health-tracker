@@ -1,11 +1,12 @@
+require('dotenv').config();
 const nodemailer = require("nodemailer");
 const {google} = require("googleapis");
-const config = require("./Mail");
+// const config = require("./Mail");
 const OAuth2 = google.auth.OAuth2;
 const PinGenerator = require('./OTP');
 
-const OAuth2_client = new OAuth2(config.clientId, config.clientSecret);
-OAuth2_client.setCredentials({refresh_token: config.refreshToken});
+const OAuth2_client = new OAuth2(process.env.MAIL_ID, process.env.MAIL_SECRET);
+OAuth2_client.setCredentials({ refresh_token: process.env.MAIL_REFRESH_TOKEN });
 
 function sendMail(recipient,data) {
   // data=JSON.stringify(data);
@@ -17,17 +18,17 @@ function sendMail(recipient,data) {
     service: "gmail",
     auth: {
       type: "OAUTH2",
-      user: config.user,
-      clientId: config.clientId,
-      clientSecret: config.clientSecret,
-      refreshToken: config.refreshToken,
+      user: process.env.MAIL_USER,
+      clientId: process.env.MAIL_ID,
+      clientSecret: process.env.MAIL_SECRET,
+      refreshToken: process.env.MAIL_REFRESH_TOKEN,
       accessToken: access_token,
     },
   });
   if(!data)
   {
     const mailOption = {
-      from: `The Health Tracker ${config.user}`,
+      from: `The Health Tracker ${process.env.MAIL_USER}`,
       to: recipient,
       subject: "Sign Up Otp for Health Tracker Website",
       html: `<h2>Your Otp is: <h1>${sentopt}</h1></h2>`,

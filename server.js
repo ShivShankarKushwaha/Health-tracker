@@ -35,10 +35,6 @@ app.use(
 
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const fs = require("fs");
-
-const config = JSON.parse(fs.readFileSync("config.json", "utf8"));
-const googleConfig = config.google;
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -46,9 +42,9 @@ app.use(passport.session());
 passport.use(
     new GoogleStrategy(
         {
-            clientID: googleConfig.web.client_id,
-            clientSecret: googleConfig.web.client_secret,
-            callbackURL: googleConfig.web.redirect_uris[0],
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: process.env.GOOGLE_REDIRECT_URI,
         },
         (accessToken, refreshToken, profile, done) =>
         {
@@ -99,7 +95,7 @@ app.get("/success", async (req, res) =>
         console.log("responce /success", responce);
     }
     res.clearCookie('user');
-    res.cookie('user', signjwt(req.session.email),{maxAge:3*24*60*60*1000});
+    res.cookie('user', signjwt(req.session.email),{maxAge:5*24*60*60*1000});
     // return res.redirect(`${process.env.FRONTEND}/dashboard`);
     return res.redirect(`/`);
 });
@@ -117,7 +113,7 @@ function comparepass(data, stored)
 function signjwt(data)
 {
     const payload = { data };
-    let token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
+    let token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5d' });
     return token;
 }
 function verifyjwt(data)
@@ -194,7 +190,7 @@ app.post("/login", async (req, res) =>
         req.session.email = email;
         res.clearCookie('user');
         const token = signjwt(req.session.email)
-        res.cookie('user', token,{maxAge:3*24*60*60*1000});
+        res.cookie('user', token,{maxAge:5*24*60*60*1000});
         console.log('cookie saving',token);
         return res.status(200).json({ status: "Successfully Logged in" });
     }
@@ -279,7 +275,7 @@ app.post("/verifyotp", async (req, res) =>
         return res.status(300).json({ message: "Data not saved in database" });
     }
     res.clearCookie('user');
-    res.cookie('user', signjwt(req.session.email),{maxAge:3*24*60*60*1000});
+    res.cookie('user', signjwt(req.session.email),{maxAge:5*24*60*60*1000});
     return res.status(200).json({ message: "Otp Verified" });
 });
 app.post("/addnote", async (req, res) =>
