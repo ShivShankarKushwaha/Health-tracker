@@ -16,7 +16,7 @@ const jwt = require('jsonwebtoken');
 app.use(bp.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static('build'));
+app.use(express.static(__dirname+'/build'));
 // if (process.env.NODE_ENV === 'production') {
 // }
 
